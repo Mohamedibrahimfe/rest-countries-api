@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import Navbar from "./component/Navbar";
-
+import { Link } from "react-router-dom";
+import CountryInfo from "./component/CountryInfo";
+import { useNavigate } from "react-router-dom";
 // Your users should be able to:
 
 // - See all countries from the API on the homepage
@@ -14,29 +16,61 @@ function App() {
   const [search, setSearch] = useState(null);
   const [allCountries, setAllCountries] = useState([]);
   const [region, setRegion] = useState("");
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
   const getCountries = async () => {
-    const response = await fetch(`https://restcountries.com/v3.1/all`);
-    const data = await response.json();
-    setAllCountries(data);
+    try {
+      setLoading(true);
+      const response = await fetch(`https://restcountries.com/v3.1/all`);
+      const data = await response.json();
+      if (!response.ok) {
+        setError(error);
+        throw new Error(response.message);
+      }
+      setLoading(false);
+      setAllCountries(data);
+    } catch (error) {
+      setError(error.message);
+    }
   };
   const getSearch = async () => {
-    const response = await fetch(
-      `https://restcountries.com/v3.1/name/${input}`
-    );
-    const data = await response.json();
-    setSearch(data);
-    setAllCountries(data);
+    try {
+      setLoading(true);
+      const response = await fetch(
+        `https://restcountries.com/v3.1/name/${input}`
+      );
+      const data = await response.json();
+      if (!response.ok) {
+        setError(error);
+        throw new Error(response.message);
+      }
+      setSearch(data);
+      setAllCountries(data);
+      setLoading(false);
+    } catch (error) {
+      setError(error.message);
+    }
   };
 
   useEffect(() => {
     getCountries();
   }, []);
   const getCountriesByFilter = async () => {
-    const response = await fetch(
-      `https://restcountries.com/v3.1/region/${region}`
-    );
-    const data = await response.json();
-    setAllCountries(data);
+    try {
+      setLoading(true);
+      const response = await fetch(
+        `https://restcountries.com/v3.1/region/${region}`
+      );
+      const data = await response.json();
+      if (!response.ok) {
+        setError(error);
+        throw new Error(response.message);
+      }
+      setAllCountries(data);
+      setLoading(false);
+    } catch (error) {
+      setError(error.message);
+    }
   };
 
   useEffect(() => {
@@ -47,6 +81,10 @@ function App() {
     }
   }, [region]);
   // console.log(allCountries);
+  const navigate = useNavigate();
+  const handleCountryClicked = (country) => {
+    navigate(`/card/${country.name}`);
+  };
   return (
     <div className="App">
       <Navbar />
@@ -103,19 +141,29 @@ function App() {
           </div>
         </div>
         <div className="countries">
-          {allCountries.map((country) => {
-            return (
-              <div key={country.name.common} className="country">
-                <img src={country.flags.png} alt={country.name.common} />
-                <div className="info">
-                  <h1>{country.name.common}</h1>
-                  <p>population: {country.population}</p>
-                  <p>Region: {country.region}</p>
-                  <p>capital: {country.capital}</p>
-                </div>
-              </div>
-            );
-          })}
+          {loading && <p className="loading">Loading...</p>}
+          {error && <p className="error">{error}</p>}
+          {!error &&
+            !loading &&
+            allCountries.map((country) => {
+              return (
+                <Link to={`/${country.name.common}`}>
+                  <div
+                    // onClick={handleCountryClicked}
+                    key={country.name.common}
+                    className="country"
+                  >
+                    <img src={country.flags.png} alt={country.name.common} />
+                    <div className="info">
+                      <h1>{country.name.common}</h1>
+                      <p>population: {country.population}</p>
+                      <p>Region: {country.region}</p>
+                      <p>capital: {country.capital}</p>
+                    </div>
+                  </div>
+                </Link>
+              );
+            })}
         </div>
       </div>
     </div>
